@@ -4,6 +4,18 @@ namespace SpriteKind {
     export const horror = SpriteKind.create()
     export const person = SpriteKind.create()
 }
+scene.onHitWall(SpriteKind.Player, function (sprite, location) {
+    if (mySprite.tileKindAt(TileDirection.Top, sprites.dungeon.chestClosed)) {
+        if (controller.B.isPressed()) {
+            tiles.setTileAt(tiles.getTileLocation(7, 0), assets.tile`myTile33`)
+            story.spriteSayText(sprite, "there is a key in this chest shall I take it?")
+            story.showPlayerChoices("take", "leave")
+            if (story.getLastAnswer() == "take") {
+                music.play(music.melodyPlayable(music.jumpUp), music.PlaybackMode.UntilDone)
+            }
+        }
+    }
+})
 controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
     if (starting == 1) {
         characterAnimations.setCharacterState(mySprite, characterAnimations.rule(Predicate.FacingUp, Predicate.MovingUp))
@@ -54,17 +66,15 @@ controller.down.onEvent(ControllerButtonEvent.Pressed, function () {
 scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.collectibleInsignia, function (sprite, location) {
     if (repeat_blocker == 0) {
         mySprite2 = sprites.create(img`
-            ................
             ....fffffff.....
-            ...fffffffff....
-            ..fff1fff1fff...
+            ..fffffffffff...
+            .ffff1fff1ffff..
             .fff111f111fff..
             .ff1111f1111ff..
             .ff1111f1111ff..
             .ff1111f1111ff..
             .fff111f111fff..
             .ffff1fff1ffff..
-            .fffffffffffff..
             ..fffffffffff...
             ...fffffffff....
             ....fffffff.....
@@ -90,24 +100,18 @@ scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.collectibleInsignia, func
             ...ffff..ffff...
             ..fffff..fffff..
             .ffffff..ffffff.
-            ffffffffffffffff
-            ................
-            ................
-            ................
-            ................
-            ................
             `, SpriteKind.horror)
         tiles.placeOnTile(mySprite2, tiles.getTileLocation(10, 39))
-        mySprite2.setVelocity(700, 0)
+        mySprite2.setVelocity(3000, 0)
         repeat_blocker += 1
     }
 })
 let mySprite2: Sprite = null
 let repeat_blocker = 0
+let mySprite5: Sprite = null
 let mySprite3: Sprite = null
 let mySprite: Sprite = null
 let starting = 0
-starting = 0
 scene.setBackgroundImage(img`
     ..........................222...................................................................................................................................
     .....................22222222...................................................................................................................................
@@ -230,6 +234,7 @@ scene.setBackgroundImage(img`
     ................................................................................................................................................................
     ................................................................................................................................................................
     `)
+starting = 0
 color.startFade(color.Black, color.originalPalette)
 story.showPlayerChoices("start", "cut scene")
 if (story.getLastAnswer() == "start") {
@@ -1497,4 +1502,30 @@ if (story.getLastAnswer() == "start") {
     tiles.loadMap(tiles.createMap(tilemap`level20`))
     story.spriteMoveToLocation(mySprite3, 115, 195, 100)
     tiles.loadMap(tiles.createMap(tilemap`level21`))
+    color.startFadeFromCurrent(color.originalPalette)
+    music.footstep.playUntilDone()
+    mySprite5 = sprites.create(img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        `, SpriteKind.horror)
+    tiles.placeOnTile(mySprite5, tiles.getTileLocation(7, 8))
+    scene.cameraFollowSprite(mySprite5)
+    mySprite3.follow(mySprite5)
+    story.printText("IT HAS BEEN CREATED", 74, 74, 2)
+    story.spriteSayText(mySprite3, "FINALLY", 2, 1, story.TextSpeed.Slow)
+    game.reset()
 }
