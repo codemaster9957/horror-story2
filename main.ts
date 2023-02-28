@@ -3,22 +3,26 @@ namespace SpriteKind {
     export const Projectile2 = SpriteKind.create()
     export const horror = SpriteKind.create()
     export const person = SpriteKind.create()
+    export const save_1 = SpriteKind.create()
 }
 scene.onHitWall(SpriteKind.Player, function (sprite, location) {
     if (mySprite.tileKindAt(TileDirection.Top, sprites.dungeon.chestClosed)) {
-        if (controller.B.isPressed()) {
-            tiles.setTileAt(tiles.getTileLocation(7, 0), assets.tile`myTile33`)
-            story.spriteSayText(sprite, "there is a key in this chest shall I take it?")
-            story.showPlayerChoices("take", "leave")
-            if (story.getLastAnswer() == "take") {
-                music.play(music.melodyPlayable(music.jumpUp), music.PlaybackMode.UntilDone)
-            }
-        }
+        tiles.setTileAt(tiles.getTileLocation(7, 0), assets.tile`myTile33`)
     }
 })
 controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
     if (starting == 1) {
         characterAnimations.setCharacterState(mySprite, characterAnimations.rule(Predicate.FacingUp, Predicate.MovingUp))
+    }
+})
+controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
+    if (starting == 1) {
+        story.showPlayerChoices("Load previous game", "back")
+    }
+    if (story.checkLastAnswer("load previous game")) {
+        loadgame()
+    } else if (story.checkLastAnswer("back")) {
+        game.splash("done!")
     }
 })
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
@@ -38,6 +42,18 @@ controller.down.onEvent(ControllerButtonEvent.Released, function () {
         characterAnimations.setCharacterState(mySprite, characterAnimations.rule(Predicate.NotMoving))
     }
 })
+function save_if_function2 () {
+    blockSettings.writeNumber("save_if", 1)
+}
+scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile33`, function (sprite, location) {
+    if (controller.B.isPressed()) {
+        story.spriteSayText(sprite, "there is a key in this chest shall I take it?")
+        story.showPlayerChoices("take", "leave")
+        if (story.getLastAnswer() == "take") {
+            music.play(music.melodyPlayable(music.jumpUp), music.PlaybackMode.UntilDone)
+        }
+    }
+})
 controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
     characterAnimations.setCharacterState(mySprite, characterAnimations.rule(Predicate.FacingLeft, Predicate.MovingLeft))
 })
@@ -50,6 +66,10 @@ controller.left.onEvent(ControllerButtonEvent.Released, function () {
 scene.onHitWall(SpriteKind.horror, function (sprite, location) {
     sprite.destroy()
 })
+function save_game () {
+    blockSettings.writeNumber("save_x", mySprite.x)
+    blockSettings.writeNumber("save_y", mySprite.y)
+}
 controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
     characterAnimations.setCharacterState(mySprite, characterAnimations.rule(Predicate.FacingRight, Predicate.MovingRight))
 })
@@ -63,6 +83,21 @@ controller.down.onEvent(ControllerButtonEvent.Pressed, function () {
         characterAnimations.setCharacterState(mySprite, characterAnimations.rule(Predicate.FacingDown, Predicate.MovingDown))
     }
 })
+function save_if_function () {
+    blockSettings.writeNumber("save_if", 1)
+}
+sprites.onOverlap(SpriteKind.Player, SpriteKind.save_1, function (sprite, otherSprite) {
+    if (controller.B.isPressed()) {
+        save_game()
+        game.splash("saved game")
+        play_number = 1
+        blockSettings.writeNumber("save_if", 1)
+    }
+})
+function loadgame () {
+    mySprite.x = blockSettings.readNumber("save_x")
+    mySprite.y = blockSettings.readNumber("save_y")
+}
 scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.collectibleInsignia, function (sprite, location) {
     if (repeat_blocker == 0) {
         mySprite2 = sprites.create(img`
@@ -110,7 +145,9 @@ let mySprite2: Sprite = null
 let repeat_blocker = 0
 let mySprite5: Sprite = null
 let mySprite3: Sprite = null
+let save_1_sprite: Sprite = null
 let mySprite: Sprite = null
+let play_number = 0
 let starting = 0
 scene.setBackgroundImage(img`
     ..........................222...................................................................................................................................
@@ -236,7 +273,7 @@ scene.setBackgroundImage(img`
     `)
 starting = 0
 color.startFade(color.Black, color.originalPalette)
-story.showPlayerChoices("start", "cut scene")
+story.showPlayerChoices("start", "cut scene", "continue")
 if (story.getLastAnswer() == "start") {
     starting = 1
     story.printText("chapter 1: what is going on?", 80, 2, 2, 15, story.TextSpeed.Normal)
@@ -365,6 +402,7 @@ if (story.getLastAnswer() == "start") {
         ................................................................................................................................................................
         `)
     tiles.setCurrentTilemap(tilemap`level3`)
+    play_number = blockSettings.readNumber("save_if_function")
     mySprite = sprites.create(img`
         . . . . . . f f f f . . . . . . 
         . . . . f f f 2 2 f f f . . . . 
@@ -383,6 +421,99 @@ if (story.getLastAnswer() == "start") {
         . . . . . f f f f f f . . . . . 
         . . . . . f f . . f f . . . . . 
         `, SpriteKind.Player)
+    save_1_sprite = sprites.create(img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . f . . . f . . . . . . 
+        . . . . . f f f f 1 f . . . . . 
+        . . . . . f 1 1 1 2 1 f . . . . 
+        . . . . . f 1 2 2 2 1 f . . . . 
+        . . . . . f 2 2 1 1 1 f . . . . 
+        . . . . . f f f f f f . . . . . 
+        . . . . . f . . . . . . . . . . 
+        . . . . . f . . . . . . . . . . 
+        . . . . . f . . . . . . . . . . 
+        . . . . . f . . . . . . . . . . 
+        . . . . . f . . . . . . . . . . 
+        `, SpriteKind.save_1)
+    tiles.placeOnTile(save_1_sprite, tiles.getTileLocation(13, 38))
+    animation.runImageAnimation(
+    save_1_sprite,
+    [img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . f . . . f . . . . . . 
+        . . . . . f f f f 1 f . . . . . 
+        . . . . . f 1 1 1 2 1 f . . . . 
+        . . . . . f 1 2 2 2 1 f . . . . 
+        . . . . . f 2 2 1 1 1 f . . . . 
+        . . . . . f f f f f f . . . . . 
+        . . . . . f . . . . . . . . . . 
+        . . . . . f . . . . . . . . . . 
+        . . . . . f . . . . . . . . . . 
+        . . . . . f . . . . . . . . . . 
+        . . . . . f . . . . . . . . . . 
+        `,img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . f . . . . . . . . . . 
+        . . . . . f f f f f . . . . . . 
+        . . . . . f 1 1 1 1 f . . . . . 
+        . . . . . f 1 2 2 2 1 f . . . . 
+        . . . . . f 2 2 1 2 1 f . . . . 
+        . . . . . f f f f 1 1 f . . . . 
+        . . . . . f . . . f f . . . . . 
+        . . . . . f . . . . . . . . . . 
+        . . . . . f . . . . . . . . . . 
+        . . . . . f . . . . . . . . . . 
+        . . . . . f . . . . . . . . . . 
+        `,img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . f . . . f . . . . . . 
+        . . . . . f f . . 1 f . . . . . 
+        . . . . . f 1 f f 2 1 f . . . . 
+        . . . . . f 1 1 1 2 1 f . . . . 
+        . . . . . f 2 2 2 1 1 f . . . . 
+        . . . . . f f 2 1 f f . . . . . 
+        . . . . . f . f f . . . . . . . 
+        . . . . . f . . . . . . . . . . 
+        . . . . . f . . . . . . . . . . 
+        . . . . . f . . . . . . . . . . 
+        . . . . . f . . . . . . . . . . 
+        `,img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . f . f f . . . . . . . 
+        . . . . . f f 1 1 f . . . . . . 
+        . . . . . f 1 2 2 1 f . . . . . 
+        . . . . . f 1 2 1 2 1 f . . . . 
+        . . . . . f 2 f f 2 1 f . . . . 
+        . . . . . f f . . 1 1 f . . . . 
+        . . . . . f . . . f f . . . . . 
+        . . . . . f . . . . . . . . . . 
+        . . . . . f . . . . . . . . . . 
+        . . . . . f . . . . . . . . . . 
+        . . . . . f . . . . . . . . . . 
+        `],
+    350,
+    true
+    )
     controller.moveSprite(mySprite)
     scene.cameraFollowSprite(mySprite)
     tiles.placeOnTile(mySprite, tiles.getTileLocation(28, 56))
@@ -1529,4 +1660,7 @@ if (story.getLastAnswer() == "start") {
     story.printText("IT HAS BEEN CREATED", 74, 74, 2)
     story.spriteSayText(mySprite3, "FINALLY", 2, 1, story.TextSpeed.Slow)
     game.reset()
+}
+if (story.getLastAnswer() == "continue") {
+	
 }
