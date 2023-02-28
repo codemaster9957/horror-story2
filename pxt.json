@@ -1,5 +1,5 @@
 {
-    "name": "horror story",
+    "name": "horror story(with save game function)",
     "description": "",
     "dependencies": {
         "device": "*",
